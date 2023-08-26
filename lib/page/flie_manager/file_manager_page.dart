@@ -50,12 +50,33 @@ class _FileManagerPageState
           },
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black38),
-            onPressed: () {
-              viewModel.refresh();
-            },
-          ),
+          Row(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text("根目录: ",style: TextStyle(fontSize: 16,color: Colors.black38),),
+                  Selector<FileManagerViewModel, String>(
+                    selector: (context, model) => model.rootPath,
+                    builder: (context,value,child) {
+                      return TextButton(
+                        child: TextView(value,fontSize: 16,),
+                        onPressed: (){
+                          viewModel.getSdcardOrUDisk();
+                        },
+                      );
+                    },
+                  )
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.black38),
+                onPressed: () {
+                  viewModel.refresh();
+                },
+              ),
+            ],
+          )
         ],
       ),
       body: DropTarget(
@@ -115,7 +136,7 @@ class _FileManagerPageState
             },
             child: Listener(
               onPointerDown: (event) {
-                viewModel.onPointerDown(context, event, index);
+                viewModel.onPointerDown(context, event, index, model.type);
               },
               child: ListTile(
                 tileColor: model.isSelect ? Theme.of(context).hoverColor : null,

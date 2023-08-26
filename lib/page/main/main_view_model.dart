@@ -115,6 +115,7 @@ class MainViewModel extends BaseViewModel {
         continue;
       }
       if (value.contains("device")) {
+        print("连接的设备" + value);
         var deviceLine = value.split("\t");
         if (deviceLine.isEmpty) {
           continue;
@@ -182,6 +183,9 @@ class MainViewModel extends BaseViewModel {
       context,
       devicesList,
       device,
+      title: "请选择设备",
+      tipText: "请输入要选择的设备",
+      notFoundText: "没有找到相关的",
       refreshCallback: () {
         getDeviceList();
       },
