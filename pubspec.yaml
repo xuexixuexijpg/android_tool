@@ -29,7 +29,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   process_run: ^0.13.1
   provider: ^6.0.5
   desktop_drop: ^0.4.1
