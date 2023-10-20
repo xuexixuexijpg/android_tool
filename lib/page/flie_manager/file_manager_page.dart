@@ -4,8 +4,9 @@ import 'package:android_tool/widget/text_view.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:selector_plus/selector_plus.dart';
 
+
+import '../../utils/selector_plus.dart';
 import 'file_manager_view_model.dart';
 
 class FileManagerPage extends StatefulWidget {

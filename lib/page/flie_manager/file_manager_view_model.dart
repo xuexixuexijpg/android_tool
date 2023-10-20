@@ -8,8 +8,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:process_run/shell.dart';
-import 'package:selector_plus/selector_plus.dart';
 
+
+import '../../utils/selector_plus.dart';
 import '../../widget/list_filter_dialog.dart';
 import 'file_model.dart';
 

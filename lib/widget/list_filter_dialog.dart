@@ -1,10 +1,10 @@
 import 'package:android_tool/page/common/package_help_mixin.dart';
 import 'package:android_tool/widget/text_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'package:selector_plus/selector_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/selector_plus.dart';
 
 class ListFilterDialog<T extends ListFilterItem> extends StatefulWidget {
   final ListFilterController controller;
