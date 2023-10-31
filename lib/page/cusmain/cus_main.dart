@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart';
@@ -59,10 +60,12 @@ class DatabaseHelper {
       // Initialize FFI
       sqfliteFfiInit();
     }
+    print(Directory.current.path);
     // Change the default factory. On iOS/Android, if not using `sqlite_flutter_lib` you can forget
     // this step, it will use the sqlite version available on the system.
     databaseFactory = databaseFactoryFfi;
     String path = join(await getDatabasesPath(), _databaseName);
+    print("数据库路径 ${path}");
     return await openDatabase(path,
         version: _databaseVersion, onCreate: _onCreate);
   }
@@ -78,11 +81,7 @@ class DatabaseHelper {
           ''');
     // 插入一些初始数据
     await db.insert(
-        table, NavItem(id: 0, title: "Home", icon: Icons.home).toMap());
-    await db.insert(
-        table, NavItem(id: 1, title: "Settings", icon: Icons.settings).toMap());
-    await db.insert(
-        table, NavItem(id: 2, title: "About", icon: Icons.info).toMap());
+        table, NavItem(id: 0, title: "add", icon: Icons.add).toMap());
   }
 
   // 查询所有数据
@@ -109,6 +108,7 @@ class DatabaseHelper {
 // 控制器类
 class NavController extends GetxController {
   static NavController get to => Get.find();
+
   // 导航栏按钮列表
   var navItems = <NavItem>[].obs;
 
@@ -126,7 +126,11 @@ class NavController extends GetxController {
   void getNavItems() async {
     var items = await DatabaseHelper.instance.queryAllRows();
     printInfo(info: '${items}');
-    navItems.value = items;
+    if (items.isEmpty) {
+      navItems.value = [NavItem(id: 0, title: "add", icon: Icons.add)];
+    } else {
+      navItems.value = items;
+    }
   }
 
   // 添加一个导航栏按钮
@@ -141,6 +145,10 @@ class NavController extends GetxController {
   // 删除一个导航栏按钮
   void deleteNavItem(int index) async {
     int id = navItems[index].id; // 获取要删除的id
+    if (id == 0) {
+      //无法删除添加的
+      return;
+    }
     await DatabaseHelper.instance.delete(id); // 删除数据库中的记录
     navItems.removeAt(index); // 删除列表中的元素
     if (selectedIndex.value == index) {
@@ -164,16 +172,14 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          NavigationListWidget(), // 左侧导航栏组件
+          Container(
+            child: NavigationListWidget(),
+            width: 120,
+            height: double.infinity,
+          ), // 左侧导航栏组件
           VerticalDivider(thickness: 1, width: 1), // 分隔线组件
           ContentWidget(), // 右侧内容组件
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.to(AddNavItemPage()); // 跳转到添加导航栏按钮页面
-        },
-        child: Icon(Icons.add),
       ),
     );
   }
@@ -184,18 +190,58 @@ class NavigationListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() => ListView.builder(
-      itemCount: NavController.to.navItems.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          leading: Icon(NavController.to.navItems[index].icon),
-          title: Text(NavController.to.navItems[index].title),
-          selected: NavController.to.selectedIndex.value == index, // 根据选中状态显示不同的颜色
-          onTap: () {
-            NavController.to.changeSelectedIndex(index); // 点击按钮时切换选中状态
+          itemExtent: 66,
+          itemCount: NavController.to.navItems.length,
+          itemBuilder: (context, index) {
+            return Container(
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: TextButton.icon(
+                onPressed: () {
+                  if (NavController.to.navItems[index].id == 0) {
+                    Get.to(AddNavItemPage()); //跳转
+                  } else {
+                    NavController.to.changeSelectedIndex(index);
+                  }
+                },
+                icon: Icon(NavController.to.navItems[index].icon),
+                label: AutoSizeText(
+                  NavController.to.navItems[index].title,
+                  style: TextStyle(fontSize: 20),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.resolveWith((states) {
+                    return NavController.to.selectedIndex.value == index
+                        ? Colors.blue
+                        : Colors.grey;
+                  }),
+                  minimumSize:
+                      MaterialStateProperty.all(Size(double.infinity, 50)),
+                ),
+              ),
+            );
+            return ListTile(
+              leading: SizedBox(
+                width: 50,
+                height: 50,
+                child: Icon(NavController.to.navItems[index].icon),
+              ),
+              title: AutoSizeText(
+                NavController.to.navItems[index].title,
+                style: TextStyle(fontSize: 20),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              selected: NavController.to.selectedIndex.value == index,
+              // 根据选中状态显示不同的颜色
+              onTap: () {
+                NavController.to.changeSelectedIndex(index); // 点击按钮时切换选中状态
+              },
+            );
           },
-        );
-      },
-    ));
+        ));
   }
 }
 
@@ -228,15 +274,20 @@ class NavigationRailWidget extends StatelessWidget {
 class ContentWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Expanded(
-          child: Center(
-            child: Text(
-              NavController
-                  .to.navItems[NavController.to.selectedIndex.value].title,
-              style: TextStyle(fontSize: 32),
-            ),
+    return Obx(() {
+      if (NavController.to.navItems.isEmpty) {
+        return Container();
+      }
+      return Expanded(
+        child: Center(
+          child: Text(
+            NavController
+                .to.navItems[NavController.to.selectedIndex.value].title,
+            style: TextStyle(fontSize: 32),
           ),
-        ));
+        ),
+      );
+    });
   }
 }
 
@@ -249,7 +300,7 @@ class AddNavItemPage extends GetView<NavController> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Add a navigation item"),
+          title: Text("新增功能"),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -326,7 +377,7 @@ class IconDataGetter {
     'home': Icons.home,
     'settings': Icons.settings,
     'info': Icons.info,
-    'add':Icons.add
+    'add': Icons.add
     // … 其他图标名称和对象的映射
   };
 
